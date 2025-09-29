@@ -1,0 +1,431 @@
+---
+title: "Fluxo de Trabalho Reprodutível com Dados Ecológicos em R"
+subtitle: "Dia 01 — Teoria"
+author: "Diogo S. B. Rocha, Hernani Ramos"
+date: 01/08/2025
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    width: 1280
+    height: 720
+    preview-links: auto
+    css: styles.css
+editor: visual
+---
+
+## Bem-vindos!
+
+### Estrutura da disciplina
+
+::: incremental
+-   Módulo 1 – Fundamentos de ciência aberta e organização de projetos
+-   Módulo 2 – Versionamento de código (Git/GitHub)
+-   Módulo 3 – Manipulação e limpeza de dados (tidyverse + importação)
+-   Módulo 4 – Visualização e análise exploratória (ggplot2, tabelas)
+-   Módulo 5 – Relatórios reprodutíveis (RMarkdown)
+-   Módulo 6 (extra) – Dados espaciais (terra, sf)
+-   Módulo 7 – Projeto final integrador (repo + relatório)
+:::
+
+------------------------------------------------------------------------
+
+### Objetivos do Dia 1
+
+-   Entender os fundamentos da ciência aberta e reprodutibilidade.
+-   Aprender a estruturar projetos organizados e reprodutíveis no R.
+-   Compreender o papel de ferramentas como RStudio Projects, Git e GitHub.
+
+------------------------------------------------------------------------
+
+## A realidade de muitos projetos...
+
+::::: columns
+::: column
+\
+\
+\
+\
+
+<blockquote>“Na minha máquina funciona” não é ciência reprodutível.</blockquote>
+:::
+
+::: column
+![](images/documents_2x.png){width="70%"}
+:::
+:::::
+
+------------------------------------------------------------------------
+
+## A Crise da Reprodutibilidade
+
+-   +50% dos cientistas já tentaram (e falharam) reproduzir estudos publicados.
+-   Dados e código indisponíveis = ciência opaca.
+-   Ecologia lida com dados complexos e modelos não triviais.
+
+**🧭 Ciência aberta + boas práticas = mais confiança, mais impacto.**
+
+------------------------------------------------------------------------
+
+## Ciência Aberta
+
+-   **Propósito:** tornar o conhecimento científico *acessível e reutilizável*\
+-   **Como:** abrir **dados, código e publicações**\
+-   **Quem participa:** cientistas **e não-cientistas**
+-   **Salvaguardas:** ética, privacidade e proteção quando “tão aberto quanto possível, **tão fechado quanto necessário**”.
+
+::: {style="font-size:0.85em; line-height:1.25"}
+> Ciência Aberta: criação, disseminação e democratização do conhecimento” (Ciência & Cultura, v.77, n.1, 2025)
+:::
+
+------------------------------------------------------------------------
+
+## FAIR — o que é e como aplicar
+
+**Princípios:**
+
+\- **F**indable (Encontrável)
+
+\- **A**ccessible (Acessível)
+
+\- **I**nteroperable (Interoperável)
+
+\- **R**eusable (Reusável)
+
+**Checklist prático:**
+
+\- README claro e dicionário de dados.
+
+-   Formatos abertos (CSV UTF-8, .tif, .gpkg).
+
+------------------------------------------------------------------------
+
+## Onde a ciência aberta acontece
+
+**Ferramentas práticas:**
+
+-   Dados: [MapBiomas](https://mapbiomas.org), [GBIF](https://www.gbif.org)
+-   Código: [GitHub](https://github.com)
+-   Arquivamento: [Zenodo](https://zenodo.org)
+-   Publicação: [Scientific Data](https://www.nature.com/sdata/)
+
+------------------------------------------------------------------------
+
+## Da coleta à comunicação: um fluxo reprodutível
+
+```{mermaid}
+%%{init: {'themeVariables': {'fontSize': '34px'}, 'flowchart': {'nodeSpacing': 42, 'rankSpacing': 42}}}%%
+
+flowchart TB
+  A["Coleta de Dados"] --> B["Importação"]
+  B --> C["Limpeza"]
+  C --> D["Análise"]
+  D --> E["Visualização"]
+  E --> F["Relatório (Quarto/Rmd) + GitHub"]
+  
+  classDef step fill:#e8f1ff,stroke:#6b8fd6,rx:10,ry:10;
+  class A,B,C,D,E,F step;
+```
+
+------------------------------------------------------------------------
+
+## Reprodutibilidade vs. Replicabilidade
+
+| Termo | Definição rápida |
+|----|----|
+| **Reprodutibilidade** | Outros obtêm os mesmos resultados com seu código. |
+| **Replicabilidade** | Outros obtêm resultados semelhantes com nova coleta. |
+
+**Exemplo prático:** seu artigo com código e dados = reprodutível.
+
+------------------------------------------------------------------------
+
+## Por que se preocupar com organização no R?
+
+🎯 Projetos desorganizados atrasam, confundem e te prejudicam.
+
+-   Reprodutibilidade exige organização **desde o início**.
+
+-   Projetos de ecologia geram muitos arquivos: tabelas, shapefiles, rasters, scripts.
+
+-   Código mal estruturado dificulta reuso, reaplicação e publicação.
+
+-   Arquivos com caminhos absolutos (`C:/meu_pc/desktop/`) não funcionam em outros computadores.
+
+> Scripts não organizados = dor de cabeça futura.\
+> Pastas bagunçadas = retrabalho.
+
+------------------------------------------------------------------------
+
+## Exemplo prático: Ecologia
+
+-   Modelos de distribuição de espécies
+-   Análises de mudança no uso da terra
+-   Avaliação de biodiversidade em paisagens fragmentadas
+
+🎯 Reprodutibilidade permite que outros testem seu modelo, ou usem seus dados em novos contextos.
+
+------------------------------------------------------------------------
+
+## Como **NÃO** organizar seu projeto
+
+\
+
+``` bash
+[meuprojeto_2022b]
+├── resultado final.csv
+├── relatorio_final_versao_final_ultima.Rmd
+├── script1.R
+├── script2_teste.R
+├── backup_old/
+├── shapefile novo/
+```
+
+\
+\
+
+> “Você já viu (ou fez) algo parecido?”
+
+------------------------------------------------------------------------
+
+## Estrutura de Projetos
+
+::::: columns
+::: column
+-   Um projeto ≠ um script solto.
+-   Use `RStudio Projects` para isolar e organizar.
+-   Use caminhos relativos.
+-   Evite `setwd()` e nunca use caminhos absolutos.
+:::
+
+::: {.column .fragment}
+**Estrutura típica:**
+
+``` bash
+[meu_projeto]
+├───data/
+│   ├───csv/
+│   │   ├───clean/
+│   │   └───raw/
+│   ├───raster/
+│   └───shape/
+├───output/
+├───scripts/
+│   ├───01_data_cleaning.R
+│   └───02_linear_regression.R
+├───report.Rmd
+└───project.Rproj
+```
+:::
+:::::
+
+------------------------------------------------------------------------
+
+## Como você organiza seus projetos?
+
+-   Pastas com nomes padronizados?
+-   Usa sempre o mesmo script para tudo?
+-   Já usou `.Rproj`?
+
+🎯 Vamos ver como padronizar e melhorar isso agora.
+
+------------------------------------------------------------------------
+
+## Caminhos relativos?
+
+❌ `read.csv("C:/meus_dados/dataset.csv")`\
+✅ `read_csv("dados/dataset.csv")`
+
+-   Nunca use caminhos absolutos;
+
+-   Manter estrutura estável de pastas.
+
+-   Caminhos relativos garantem que o projeto funcione em qualquer máquina.
+
+-   
+
+    ## Baseado no diretório raiz do `.Rproj`.
+
+## Congele o ambiente com `renv`
+
+-   Versões de pacotes importam para reprodutibilidade.
+
+-   **Fluxo**: `renv::init()` → `renv::snapshot()` → `renv::restore()` em outra máquina.
+
+-   Garante que todos usem **as mesmas versões** de pacotes.
+
+-   **Documente o ambiente** no relatório (apêndice): `sessionInfo()`.
+
+------------------------------------------------------------------------
+
+## Seeds & reprodutibilidade
+
+-   Modelos/amostragens estocásticas precisam de seed.
+
+-   Defina sempre `set.seed(123)` antes de rodar análises aleatórias.
+
+-   Registre o seed no relatório para permitir a reprodução exata.
+
+-   Se usar múltiplas rotinas, padronize a fonte de aleatoriedade.
+
+------------------------------------------------------------------------
+
+## Como garantir rastreabilidade no seu fluxo?
+
+-   Código limpo e comentado.
+-   **Nomeie seus scripts por função:** `01_importar_dados.R`, `02_limpeza.R`, `03_analise.R`.
+-   **Salve objetos intermediários:** use `saveRDS()` e `readRDS()` para facilitar reuso.
+-   **Evite sobrescrever dados brutos:** nunca edite arquivos originais diretamente.
+-   **Padronize nomes e estruturas de pasta.**
+
+📦 Reprodutibilidade exige que *você (ou outra pessoa)* possa **refazer tudo do zero**.
+
+------------------------------------------------------------------------
+
+## Exemplo real
+
+``` bash
+[lulc_model]
+│   .gitignore
+│   analise_lulc.Rmd
+│   README.md
+│   simulação_LAM.pdf
+│   lulc_model.Rproj
+├───data
+│   └───Limites_IBGE
+│           lim_municipio_a.cpg
+│           lim_municipio_a.dbf
+│           lim_municipio_a.prj
+│           lim_municipio_a.shp
+│           lim_municipio_a.shx
+│           lim_unidade_federacao_a.cpg
+│           lim_unidade_federacao_a.dbf
+│           lim_unidade_federacao_a.prj
+│           lim_unidade_federacao_a.shp
+│           lim_unidade_federacao_a.shx
+├───input
+│   │   dens_pop.tif
+│   │   dist_major_roads_m.tif
+│   │   dist_minor_roads_m.tif
+│   │   dist_rios_m.tif
+│   │   dist_track_m.tif
+│   │   lulc_reclassified_2000.tif
+│   │   lulc_reclassified_2001.tif
+│   │   lulc_reclassified_2002.tif
+│   │   lulc_reclassified_2003.tif
+│   │   lulc_reclassified_2004.tif
+│   │   lulc_reclassified_2005.tif
+│   │   lulc_reclassified_2006.tif
+│   │   lulc_reclassified_2007.tif
+│   │   lulc_reclassified_2008.tif
+│   │   lulc_reclassified_2009.tif
+│   │   lulc_reclassified_2010.tif
+│   │   lulc_reclassified_2011.tif
+│   │   lulc_reclassified_2012.tif
+│   │   lulc_reclassified_2013.tif
+│   │   lulc_reclassified_2014.tif
+│   │   lulc_reclassified_2015.tif
+│   │   lulc_reclassified_2016.tif
+│   │   lulc_reclassified_2017.tif
+│   │   lulc_reclassified_2018.tif
+│   │   lulc_reclassified_2019.tif
+│   │   lulc_reclassified_2020.tif
+│   │   lulc_reclassified_2021.tif
+│   │   lulc_reclassified_2022.tif
+│   │   lulc_reclassified_2023.tif
+│   │   precip_30m.tif
+│   │   proporcoes_antropicos.tif
+│   │   slope_una.tif
+│   │   temp_30m.tif
+│   │   tpi_una.tif
+│   │
+│   └───correlacionadas
+│           altitude_una.tif
+│           proporcoes_naturais.tif
+│           proporcoes_urbano.tif
+│           tri_una.tif
+├───output
+│       areas_transicao.csv
+│       matriz_transicao.csv
+│       modelos_rf.rds
+│       prob_1_3.tif
+│       prob_2_3.tif
+│       prob_3_1.tif
+│       prob_3_2.tif
+│       prob_3_4.tif
+│       projecao_2025.tif
+│       projecao_2030.tif
+│       projecao_2035.tif
+│       projecao_2040.tif
+│       projecao_2045.tif
+│       projecao_2050.tif
+│       uso_base_projecao.tif
+│       uso_proj.tif
+├───plots
+│       boxplot_probs.png
+│       importancia_variaveis_rf.png
+│       mapas_presente.png
+│       mapas_futuro.png
+│       perdas_ganhos_total.png
+│       perdas_ganhos_total_futuro.png
+│       perdas_ganhos_periodos.png
+│       perdas_ganhos_periodos_futuro.png
+│       sankey_lulc.png
+│       tendencia_preditoras_1_3.png
+│       tendencia_preditoras_2_3.png
+│       tendencia_preditoras_3_1.png
+│       tendencia_preditoras_3_2.png
+│       tendencia_preditoras_3_4.png
+│
+├───functions
+│       alocar_transicao.R
+│       ampliar_amostras_temporais.R
+│       calcular_areas_transicao.R
+│       calcular_ganhos_perdas.R
+│       carregar_dados.R
+│       gerar_amostras.R
+│       gerar_mudancas.R
+│       matriz_transicao.R
+│       prever_probabilidade.R
+│       remover_variaveis_correlacionadas.R
+│       treinar_rf.R
+│       validar_modelo.R
+│
+└───scripts
+│       01_rodar_modelo.R
+│       02_projetar_futuro.R
+│       03_desempenho_modelo.R
+│       04_graficos_barras.R
+│       05_graficos_boxplot.R
+│       06_graficos_sankey.R
+│       07_graficos_importancia_variaveis.R
+│       08_tendencia_espacial.R
+│       09_mapas.R
+```
+
+------------------------------------------------------------------------
+
+## Resumo do Dia 1 – Teoria
+
+-   Reprodutibilidade é um pilar da boa ciência.
+-   R e RStudio oferecem ferramentas robustas para isso.
+-   Organização e padronização são fundamentais.
+
+------------------------------------------------------------------------
+
+## Discussão Rápida
+
+\
+
+👉 Você já tentou reproduzir uma análise de outra pessoa?\
+\
+\
+👉 Seus próprios scripts antigos: são compreensíveis hoje?
+
+------------------------------------------------------------------------
+
+## Dúvidas?
+
+-   Alguma dúvida ou comentário até aqui?\
+    \
+-   Em breve: vamos pôr a mão na massa 🚀
