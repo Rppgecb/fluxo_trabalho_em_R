@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diogo S. B. Rocha · Hernani Ramos">
+<meta name="dcterms.date" content="2025-09-28">
+
+<title>Prática — Fluxo de Trabalho Reprodutível com Dados Ecológicos em R (Dia 03)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulos_1_2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulos_1_2_files/libs/quarto-html/quarto.js"></script>
+<script src="modulos_1_2_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulos_1_2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulos_1_2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulos_1_2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulos_1_2_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulos_1_2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulos_1_2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulos_1_2_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#checklist-do-ambiente-marque-o-que-concluir" id="toc-checklist-do-ambiente-marque-o-que-concluir" class="nav-link active" data-scroll-target="#checklist-do-ambiente-marque-o-que-concluir">1) Checklist do ambiente (marque o que concluir)</a>
+  <ul class="collapse">
+  <li><a href="#verificar-r-e-rstudio" id="toc-verificar-r-e-rstudio" class="nav-link" data-scroll-target="#verificar-r-e-rstudio">1.1 Verificar R e RStudio</a></li>
+  <li><a href="#verificar-git-git-bash-no-windows" id="toc-verificar-git-git-bash-no-windows" class="nav-link" data-scroll-target="#verificar-git-git-bash-no-windows">1.2 Verificar Git (Git Bash no Windows)</a></li>
+  <li><a href="#rstudio-configurações-globais-recomendadas" id="toc-rstudio-configurações-globais-recomendadas" class="nav-link" data-scroll-target="#rstudio-configurações-globais-recomendadas">1.3 RStudio — Configurações Globais recomendadas</a></li>
+  <li><a href="#github-ssh" id="toc-github-ssh" class="nav-link" data-scroll-target="#github-ssh">1.4 GitHub + SSH</a></li>
+  </ul></li>
+  <li><a href="#projeto-e-repositório" id="toc-projeto-e-repositório" class="nav-link" data-scroll-target="#projeto-e-repositório">2) Projeto e repositório</a>
+  <ul class="collapse">
+  <li><a href="#criar-um-projeto-com-git" id="toc-criar-um-projeto-com-git" class="nav-link" data-scroll-target="#criar-um-projeto-com-git">2.1 Criar um projeto com Git</a></li>
+  <li><a href="#estrutura-de-pastas-padronizada" id="toc-estrutura-de-pastas-padronizada" class="nav-link" data-scroll-target="#estrutura-de-pastas-padronizada">2.2 Estrutura de pastas padronizada</a></li>
+  </ul></li>
+  <li><a href="#exercício-prático-recebendo-dados-de-um-parceiro" id="toc-exercício-prático-recebendo-dados-de-um-parceiro" class="nav-link" data-scroll-target="#exercício-prático-recebendo-dados-de-um-parceiro">3) Exercício prático: recebendo dados de um parceiro</a>
+  <ul class="collapse">
+  <li><a href="#contexto-e-mail-fictício" id="toc-contexto-e-mail-fictício" class="nav-link" data-scroll-target="#contexto-e-mail-fictício">3.1 Contexto (e-mail fictício)</a></li>
+  <li><a href="#gerar-dados-de-exemplo-se-você-não-tiver-os-anexos" id="toc-gerar-dados-de-exemplo-se-você-não-tiver-os-anexos" class="nav-link" data-scroll-target="#gerar-dados-de-exemplo-se-você-não-tiver-os-anexos">3.2 Gerar dados de exemplo (se você não tiver os anexos)</a></li>
+  <li><a href="#organização-dos-scripts" id="toc-organização-dos-scripts" class="nav-link" data-scroll-target="#organização-dos-scripts">3.3 Organização dos scripts</a>
+  <ul class="collapse">
+  <li><a href="#template-scripts01_preparo_dados.r" id="toc-template-scripts01_preparo_dados.r" class="nav-link" data-scroll-target="#template-scripts01_preparo_dados.r">Template: <code>scripts/01_preparo_dados.R</code></a></li>
+  <li><a href="#template-scripts02_descritiva.r" id="toc-template-scripts02_descritiva.r" class="nav-link" data-scroll-target="#template-scripts02_descritiva.r">Template: <code>scripts/02_descritiva.R</code></a></li>
+  </ul></li>
+  <li><a href="#execução-ordem-sugerida" id="toc-execução-ordem-sugerida" class="nav-link" data-scroll-target="#execução-ordem-sugerida">3.4 Execução (ordem sugerida)</a></li>
+  </ul></li>
+  <li><a href="#tag-de-entrega" id="toc-tag-de-entrega" class="nav-link" data-scroll-target="#tag-de-entrega">4) Tag de entrega</a></li>
+  <li><a href="#checklist-final-deveria-estar-tudo-marcado" id="toc-checklist-final-deveria-estar-tudo-marcado" class="nav-link" data-scroll-target="#checklist-final-deveria-estar-tudo-marcado">5) Checklist final (deveria estar tudo marcado ✅)</a>
+  <ul class="collapse">
+  <li><a href="#apêndice-pacotes-úteis" id="toc-apêndice-pacotes-úteis" class="nav-link" data-scroll-target="#apêndice-pacotes-úteis">Apêndice — Pacotes úteis</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Prática — Fluxo de Trabalho Reprodutível com Dados Ecológicos em R (Dia 03)</h1>
+<p class="subtitle lead">Checklist do Ambiente + Exercício Guiado</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diogo S. B. Rocha · Hernani Ramos </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 28, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>Objetivo:</strong> configurar um ambiente reprodutível (R + RStudio + Git + GitHub via SSH), criar um repositório com estrutura padronizada, <strong>simular o recebimento de dados</strong> de um parceiro científico e <strong>gerar uma tabela de estatística descritiva</strong>, salvando saídas nas pastas certas. Ao final, criar <strong>uma <em>tag</em> Git</strong> para marcar a entrega.</p>
+</blockquote>
+<section id="checklist-do-ambiente-marque-o-que-concluir" class="level1">
+<h1>1) Checklist do ambiente (marque o que concluir)</h1>
+<ul class="task-list">
+<li><label><input type="checkbox">Verificar se <strong>R</strong> está instalado</label></li>
+<li><label><input type="checkbox">Verificar <strong>versão do R</strong></label></li>
+<li><label><input type="checkbox">Verificar se <strong>RStudio</strong> está instalado</label></li>
+<li><label><input type="checkbox">Verificar <strong>versão do RStudio</strong></label></li>
+<li><label><input type="checkbox">Verificar se <strong>Git</strong> (Git Bash no Windows) está instalado</label></li>
+<li><label><input type="checkbox">Ajustar <strong>Configurações globais</strong> recomendadas no RStudio</label></li>
+<li><label><input type="checkbox">Ter <strong>conta no GitHub</strong> (anotar usuário)</label></li>
+<li><label><input type="checkbox"><strong>Criar chave SSH</strong> e adicioná-la ao GitHub</label></li>
+<li><label><input type="checkbox"><strong>Conectar RStudio ↔︎ GitHub</strong> (protocolo SSH)</label></li>
+<li><label><input type="checkbox"><strong>Criar um repositório</strong> para a prática</label></li>
+<li><label><input type="checkbox"><strong>Criar estrutura de pastas</strong> padronizada</label></li>
+<li><label><input type="checkbox"><strong>Organizar os dados</strong> em <code>data/</code> (raw vs processed)</label></li>
+<li><label><input type="checkbox"><strong>Criar e organizar scripts</strong> em <code>scripts/</code></label></li>
+<li><label><input type="checkbox"><strong>Fazer commits</strong> (mensagens claras)</label></li>
+<li><label><input type="checkbox"><strong>Criar uma <em>tag</em></strong> ao finalizar</label></li>
+</ul>
+<section id="verificar-r-e-rstudio" class="level2">
+<h2 class="anchored" data-anchor-id="verificar-r-e-rstudio">1.1 Verificar R e RStudio</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Versão do R</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>R.version.string</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "R version 4.5.1 (2025-06-13)"</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Versão do RStudio (se estiver rodando dentro do RStudio)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">"rstudioapi"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>(rstudioapi<span class="sc">::</span><span class="fu">versionInfo</span>()<span class="sc">$</span>version, <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"Rode no RStudio para detectar a versão."</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Pacote rstudioapi não está instalado ou não está no RStudio."</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Rode no RStudio para detectar a versão."</code></pre>
+</div>
+</div>
+</section>
+<section id="verificar-git-git-bash-no-windows" class="level2">
+<h2 class="anchored" data-anchor-id="verificar-git-git-bash-no-windows">1.2 Verificar Git (Git Bash no Windows)</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>git_path <span class="ot">&lt;-</span> <span class="fu">Sys.which</span>(<span class="st">"git"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">git_path =</span> git_path, <span class="at">git_version =</span> <span class="fu">tryCatch</span>(<span class="fu">system</span>(<span class="st">"git --version"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$git_path
+           git 
+"/usr/bin/git" 
+
+$git_version
+[1] "git version 2.43.0"</code></pre>
+</div>
+</div>
+<p><strong>Se <code>git_path</code> estiver vazio:</strong> instale o Git (no Windows, com Git Bash) e reinicie o RStudio.<br>
+- Windows: https://git-scm.com/download/win<br>
+- macOS: <code>xcode-select --install</code> (ou instale via Homebrew: <code>brew install git</code>)<br>
+- Linux (Debian/Ubuntu): <code>sudo apt-get install git</code></p>
+</section>
+<section id="rstudio-configurações-globais-recomendadas" class="level2">
+<h2 class="anchored" data-anchor-id="rstudio-configurações-globais-recomendadas">1.3 RStudio — Configurações Globais recomendadas</h2>
+<ul>
+<li>Abra <strong>Tools &gt; Global Options…</strong> e ajuste:<br>
+
+<ul>
+<li><strong>General</strong>:<br>
+</li>
+<li>desmarque <em>Restore .RData into workspace at startup</em><br>
+</li>
+<li>em <em>Save workspace to .RData on exit</em>: selecione <strong>Never</strong><br>
+</li>
+<li>desmarque *Always save history (even when not saving .Rdata)<br>
+</li>
+<li><strong>Code</strong>:<br>
+</li>
+<li>Editing<br>
+</li>
+<li>marque* Insert spaces for Tab*<br>
+</li>
+<li>habilite <em>Soft-wrap</em> para código (opcional)<br>
+</li>
+<li><em>Display</em><br>
+</li>
+<li>marque <em>Show line numbers</em><br>
+</li>
+<li>marque <em>Highlight R function calls</em><br>
+</li>
+<li>marque <em>Enable preview of names …</em><br>
+</li>
+<li>marque <em>Use rainbow parentheses</em><br>
+</li>
+<li><em>Saving</em>:<br>
+</li>
+<li>em <em>Default text encoding:</em> vá em <em>Change:</em> e escolha <strong>UTF-8</strong><br>
+</li>
+<li><strong>Terminal</strong> (Windows): defina <strong>Git Bash</strong> como terminal (opcional, mas recomendado).<br>
+</li>
+<li><strong>Appearance</strong>: veja se tem algum <em>Editor theme</em> que lhe agrade mais :)<br>
+</li>
+</ul></li>
+</ul>
+</section>
+<section id="github-ssh" class="level2">
+<h2 class="anchored" data-anchor-id="github-ssh">1.4 GitHub + SSH</h2>
+<ol type="1">
+<li>Crie uma conta em <strong>github.com</strong> (se ainda não tiver).<br>
+</li>
+<li>Gere uma <strong>chave SSH</strong> (uma única vez por máquina). Em <strong>Tools</strong> -&gt; <strong>Global options</strong> -&gt; <strong>Git/SVN</strong> -&gt; <strong>SSH key</strong></li>
+<li>No GitHub: <strong>Settings &gt; SSH and GPG keys &gt; New SSH key</strong> → cole a <strong>chave pública</strong> e salve.<br>
+</li>
+<li>Teste no terminal (Git Bash/macOS/Linux):</li>
+</ol>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-T</span> git@github.com</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Deve aparecer algo como: <em>“Hi* <seu-usuario>! You’ve successfully authenticated…” (na primeira vez, confirme </seu-usuario></em>yes*).</p>
+</section>
+</section>
+<section id="projeto-e-repositório" class="level1">
+<h1>2) Projeto e repositório</h1>
+<section id="criar-um-projeto-com-git" class="level2">
+<h2 class="anchored" data-anchor-id="criar-um-projeto-com-git">2.1 Criar um projeto com Git</h2>
+<p><strong>Opção A (Recomendado):</strong> RStudio → <strong>New Project &gt; New Directory &gt; New Project</strong> → marque <strong>Create a git repository</strong>.<br>
+<strong>Opção B (Clonar do GitHub):</strong> crie um repositório vazio no GitHub (via web), copie a <strong>URL SSH</strong> e use <strong>New Project &gt; Version Control &gt; Git</strong>.</p>
+<p>Para vincular um projeto local a um repositório remoto depois:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> remote add origin git@github.com:SEU-USUARIO/nome-do-repo.git</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> branch <span class="at">-M</span> main</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push <span class="at">-u</span> origin main</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="estrutura-de-pastas-padronizada" class="level2">
+<h2 class="anchored" data-anchor-id="estrutura-de-pastas-padronizada">2.2 Estrutura de pastas padronizada</h2>
+<p>Crie as pastas abaixo (pode rodar este chunk uma vez):</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dirs <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data/raw"</span>, <span class="st">"data/processed"</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"scripts"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"outputs/figuras"</span>, <span class="st">"outputs/tabelas"</span>, <span class="st">"outputs/logs"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"docs"</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (d <span class="cf">in</span> dirs) <span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(d)) <span class="fu">dir.create</span>(d, <span class="at">recursive =</span> <span class="cn">TRUE</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Arquivos úteis</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">".gitignore"</span>)) <span class="fu">writeLines</span>(<span class="fu">c</span>(</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">".Rhistory"</span>, <span class="st">".RData"</span>, <span class="st">".Rproj.user"</span>, <span class="st">".Renviron"</span>, <span class="st">"outputs/logs/"</span>, <span class="st">"data/processed/*.rds"</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>), <span class="st">".gitignore"</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"README.md"</span>)) <span class="fu">writeLines</span>(<span class="st">"# Prática — Fluxo Reprodutível (Dia 03)</span><span class="sc">\n</span><span class="st">"</span>, <span class="st">"README.md"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Faça um <strong>commit</strong> com a mensagem: <em>“estrutura inicial de pastas + gitignore”</em>.</p>
+</section>
+</section>
+<section id="exercício-prático-recebendo-dados-de-um-parceiro" class="level1">
+<h1>3) Exercício prático: recebendo dados de um parceiro</h1>
+<section id="contexto-e-mail-fictício" class="level2">
+<h2 class="anchored" data-anchor-id="contexto-e-mail-fictício">3.1 Contexto (e-mail fictício)</h2>
+<blockquote class="blockquote">
+<p><strong>Assunto:</strong> Dados de monitoramento — Mata Atlântica (solicitação de resumo)<br>
+<strong>De:</strong> Dra. Helena Silva <a href="mailto:helena.silva@labeco.org" class="email">helena.silva@labeco.org</a><br>
+<strong>Para:</strong> Você <a href="mailto:voce@universidade.br" class="email">voce@universidade.br</a><br>
+<strong>Data:</strong> 20/08/2025</p>
+<p>Olá,<br>
+Em anexo estão dois arquivos com dados de uma campanha de campo realizada em 2024-2025:<br>
+1) <code>ocorrencias_herpetofauna_2024_2025.csv</code> — registros por parcela com colunas: <code>site_id</code>, <code>data</code>, <code>bioma</code>, <code>especie</code>, <code>abundancia</code>.<br>
+2) <code>locais_amostragem.csv</code> — metadados dos locais (<code>site_id</code>, <code>municipio</code>, <code>uf</code>, <code>lat</code>, <code>lon</code>, <code>area_ha</code>, <code>tipo_habitat</code>).</p>
+<p><strong>Precisamos até amanhã</strong> de uma <strong>tabela de estatística descritiva</strong> que traga, <strong>por espécie e por tipo de habitat</strong>: <em>n amostras, soma de abundância, média, desvio-padrão, mínimo e máximo</em> de <code>abundancia</code>.<br>
+Por favor:<br>
+- Mantenha os <strong>dados brutos</strong> intocados em <code>data/raw/</code>.<br>
+- Faça a limpeza e junção em <strong>scripts</strong> separados e salve a versão tratada em <code>data/processed/</code>.<br>
+- Salve a <strong>tabela final</strong> em <code>outputs/tabelas/</code> e, se possível, um <strong>boxplot</strong> de abundância por espécie em <code>outputs/figuras/</code>.<br>
+- Versione tudo no Git e nos avise quando finalizar (pode marcar uma <strong>tag</strong>).</p>
+<p>Obrigada,<br>
+Helena</p>
+</blockquote>
+</section>
+<section id="gerar-dados-de-exemplo-se-você-não-tiver-os-anexos" class="level2">
+<h2 class="anchored" data-anchor-id="gerar-dados-de-exemplo-se-você-não-tiver-os-anexos">3.2 Gerar dados de exemplo (se você não tiver os anexos)</h2>
+<blockquote class="blockquote">
+<p><strong>Obs.:</strong> este chunk apenas <strong>simula</strong> os arquivos do parceiro dentro de <code>data/raw/</code>.</p>
+</blockquote>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(<span class="st">"data/raw"</span>)) <span class="fu">dir.create</span>(<span class="st">"data/raw"</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Locais</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>locais <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">site_id =</span> <span class="fu">sprintf</span>(<span class="st">"S%03d"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>),</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">municipio =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Ilhéus"</span>,<span class="st">"Una"</span>,<span class="st">"Itacaré"</span>,<span class="st">"Uruçuca"</span>), <span class="dv">20</span>, <span class="cn">TRUE</span>),</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">uf =</span> <span class="st">"BA"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">lat =</span> <span class="fu">runif</span>(<span class="dv">20</span>, <span class="sc">-</span><span class="fl">15.5</span>, <span class="sc">-</span><span class="fl">13.5</span>),</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">lon =</span> <span class="fu">runif</span>(<span class="dv">20</span>, <span class="sc">-</span><span class="fl">40.0</span>, <span class="sc">-</span><span class="fl">38.0</span>),</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">area_ha =</span> <span class="fu">round</span>(<span class="fu">runif</span>(<span class="dv">20</span>, <span class="dv">5</span>, <span class="dv">300</span>), <span class="dv">1</span>),</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">tipo_habitat =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Floresta"</span>,<span class="st">"Mata Secundária"</span>,<span class="st">"Cabruca"</span>), <span class="dv">20</span>, <span class="cn">TRUE</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Ocorrências (2024-2025)</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>especies <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Chaunus ictericus"</span>,<span class="st">"Boana faber"</span>,<span class="st">"Leptodactylus latrans"</span>,<span class="st">"Rhinella crucifer"</span>)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>datas <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">as.Date</span>(<span class="st">"2024-03-01"</span>), <span class="fu">as.Date</span>(<span class="st">"2025-02-28"</span>), <span class="at">by =</span> <span class="st">"week"</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>ocorr <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">site_id =</span> <span class="fu">sample</span>(locais<span class="sc">$</span>site_id, <span class="dv">400</span>, <span class="cn">TRUE</span>),</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">sample</span>(datas, <span class="dv">400</span>, <span class="cn">TRUE</span>),</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">bioma =</span> <span class="st">"Mata Atlantica"</span>,</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">especie =</span> <span class="fu">sample</span>(especies, <span class="dv">400</span>, <span class="cn">TRUE</span>),</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">abundancia =</span> <span class="fu">rpois</span>(<span class="dv">400</span>, <span class="at">lambda =</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">400</span>, <span class="cn">TRUE</span>))</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(ocorr, <span class="st">"data/raw/ocorrencias_herpetofauna_2024_2025.csv"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(locais, <span class="st">"data/raw/locais_amostragem.csv"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Faça um <strong>commit</strong>: <em>“data: adiciona dados brutos simulados (ocorrências + locais)”</em>.</p>
+</section>
+<section id="organização-dos-scripts" class="level2">
+<h2 class="anchored" data-anchor-id="organização-dos-scripts">3.3 Organização dos scripts</h2>
+<p>Crie dois scripts em <code>scripts/</code>:</p>
+<ol type="1">
+<li><code>01_preparo_dados.R</code> — leitura, limpeza, junção e exportação para <code>data/processed/</code></li>
+<li><code>02_descritiva.R</code> — cálculo das estatísticas e exportação para <code>outputs/tabelas/</code> (+ figura em <code>outputs/figuras/</code>)</li>
+</ol>
+<blockquote class="blockquote">
+<p>Você pode usar os <strong>templates</strong> abaixo (eles <strong>não rodam automaticamente</strong>). Copie e ajuste conforme necessário.</p>
+</blockquote>
+<section id="template-scripts01_preparo_dados.r" class="level3">
+<h3 class="anchored" data-anchor-id="template-scripts01_preparo_dados.r">Template: <code>scripts/01_preparo_dados.R</code></h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># scripts/01_preparo_dados.R</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Leitura, limpeza e junção dos dados para data/processed/</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Pacotes</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>req <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"janitor"</span>, <span class="st">"lubridate"</span>, <span class="st">"here"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>new <span class="ot">&lt;-</span> req[<span class="sc">!</span>req <span class="sc">%in%</span> <span class="fu">installed.packages</span>()[,<span class="dv">1</span>]]</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(new)) <span class="fu">install.packages</span>(new, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">invisible</span>(<span class="fu">lapply</span>(req, library, <span class="at">character.only =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Caminhos</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>raw_dir <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"raw"</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>proc_dir <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"processed"</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(proc_dir)) <span class="fu">dir.create</span>(proc_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Leitura</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>occ <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="fu">file.path</span>(raw_dir, <span class="st">"ocorrencias_herpetofauna_2024_2025.csv"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>loc <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="fu">file.path</span>(raw_dir, <span class="st">"locais_amostragem.csv"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Tratamento básico</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>occ <span class="ot">&lt;-</span> occ <span class="sc">%&gt;%</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> lubridate<span class="sc">::</span><span class="fu">as_date</span>(data),</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">especie =</span> stringr<span class="sc">::</span><span class="fu">str_squish</span>(especie),</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">abundancia =</span> <span class="fu">as.numeric</span>(abundancia)</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Junção</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>dados <span class="ot">&lt;-</span> occ <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(loc, <span class="at">by =</span> <span class="st">"site_id"</span>)</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Validar colunas essenciais</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(<span class="fu">c</span>(<span class="st">"site_id"</span>,<span class="st">"data"</span>,<span class="st">"especie"</span>,<span class="st">"abundancia"</span>,<span class="st">"tipo_habitat"</span>) <span class="sc">%in%</span> <span class="fu">names</span>(dados)))</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Exportar</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>out_csv <span class="ot">&lt;-</span> <span class="fu">file.path</span>(proc_dir, <span class="st">"ocorrencias_tratadas.csv"</span>)</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>readr<span class="sc">::</span><span class="fu">write_csv</span>(dados, out_csv)</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Salvo: "</span>, out_csv)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="template-scripts02_descritiva.r" class="level3">
+<h3 class="anchored" data-anchor-id="template-scripts02_descritiva.r">Template: <code>scripts/02_descritiva.R</code></h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># scripts/02_descritiva.R</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Estatística descritiva por especie x tipo_habitat</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>req <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"here"</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>new <span class="ot">&lt;-</span> req[<span class="sc">!</span>req <span class="sc">%in%</span> <span class="fu">installed.packages</span>()[,<span class="dv">1</span>]]</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(new)) <span class="fu">install.packages</span>(new, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">invisible</span>(<span class="fu">lapply</span>(req, library, <span class="at">character.only =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>proc_dir <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"processed"</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>tab_dir  <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"outputs"</span>, <span class="st">"tabelas"</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>fig_dir  <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"outputs"</span>, <span class="st">"figuras"</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (d <span class="cf">in</span> <span class="fu">c</span>(tab_dir, fig_dir)) <span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(d)) <span class="fu">dir.create</span>(d, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>dados <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="fu">file.path</span>(proc_dir, <span class="st">"ocorrencias_tratadas.csv"</span>))</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Estatística descritiva</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>desc <span class="ot">&lt;-</span> dados <span class="sc">%&gt;%</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(especie, tipo_habitat) <span class="sc">%&gt;%</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_amostras =</span> <span class="fu">n</span>(),</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">soma_abund =</span> <span class="fu">sum</span>(abundancia, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">media =</span> <span class="fu">mean</span>(abundancia, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">dp =</span> <span class="fu">sd</span>(abundancia, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">minimo =</span> <span class="fu">min</span>(abundancia, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">maximo =</span> <span class="fu">max</span>(abundancia, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(especie, tipo_habitat)</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>out_csv <span class="ot">&lt;-</span> <span class="fu">file.path</span>(tab_dir, <span class="st">"estatistica_descritiva_especie_habitat.csv"</span>)</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>readr<span class="sc">::</span><span class="fu">write_csv</span>(desc, out_csv)</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Salvo: "</span>, out_csv)</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Figura (boxplot)</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dados, <span class="fu">aes</span>(<span class="at">x =</span> especie, <span class="at">y =</span> abundancia)) <span class="sc">+</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Espécie"</span>, <span class="at">y =</span> <span class="st">"Abundância"</span>, <span class="at">title =</span> <span class="st">"Abundância por espécie"</span>) <span class="sc">+</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>out_png <span class="ot">&lt;-</span> <span class="fu">file.path</span>(fig_dir, <span class="st">"boxplot_abundancia_por_especie.png"</span>)</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(out_png, p, <span class="at">width =</span> <span class="dv">9</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">300</span>)</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Salvo: "</span>, out_png)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Faça <strong>commits</strong> a cada etapa (mensagens curtas e claras). Exemplos: - <em>“feat: script de preparo de dados”</em> - <em>“feat: script de descritiva + tabela/figura”</em></p>
+</section>
+</section>
+<section id="execução-ordem-sugerida" class="level2">
+<h2 class="anchored" data-anchor-id="execução-ordem-sugerida">3.4 Execução (ordem sugerida)</h2>
+<ol type="1">
+<li>Rodar <code>scripts/01_preparo_dados.R</code><br>
+</li>
+<li>Conferir <code>data/processed/ocorrencias_tratadas.csv</code><br>
+</li>
+<li>Rodar <code>scripts/02_descritiva.R</code><br>
+</li>
+<li>Conferir <code>outputs/tabelas/estatistica_descritiva_especie_habitat.csv</code> e a figura em <code>outputs/figuras/</code></li>
+</ol>
+</section>
+</section>
+<section id="tag-de-entrega" class="level1">
+<h1>4) Tag de entrega</h1>
+<p>No <strong>Terminal</strong> (no diretório do projeto):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"Entrega: descritiva herpetofauna (Dia 03)"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> v0.1 <span class="at">-m</span> <span class="st">"Entrega prática Dia 03"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin v0.1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<blockquote class="blockquote">
+<p><strong>Alternativa em R (gert):</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"gert"</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gert)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>gert<span class="sc">::</span><span class="fu">git_add</span>(<span class="st">"."</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>gert<span class="sc">::</span><span class="fu">git_commit</span>(<span class="st">"Entrega: descritiva herpetofauna (Dia 03)"</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>gert<span class="sc">::</span><span class="fu">git_tag_create</span>(<span class="st">"v0.1"</span>, <span class="at">message =</span> <span class="st">"Entrega prática Dia 03"</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>gert<span class="sc">::</span><span class="fu">git_push</span>()</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>gert<span class="sc">::</span><span class="fu">git_push</span>(<span class="at">tags =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</blockquote>
+</section>
+<section id="checklist-final-deveria-estar-tudo-marcado" class="level1">
+<h1>5) Checklist final (deveria estar tudo marcado ✅)</h1>
+<ul class="task-list">
+<li><label><input type="checkbox">Repositório criado e vinculado ao GitHub por <strong>SSH</strong></label></li>
+<li><label><input type="checkbox">Estrutura de pastas padronizada criada</label></li>
+<li><label><input type="checkbox">Dados brutos em <code>data/raw/</code></label></li>
+<li><label><input type="checkbox">Dados processados em <code>data/processed/</code></label></li>
+<li><label><input type="checkbox">Scripts em <code>scripts/</code> (separados por etapa)</label></li>
+<li><label><input type="checkbox">Tabela final em <code>outputs/tabelas/</code></label></li>
+<li><label><input type="checkbox">Figura em <code>outputs/figuras/</code></label></li>
+<li><label><input type="checkbox">Commits feitos com mensagens claras</label></li>
+<li><label><input type="checkbox"><strong>Tag</strong> criada e enviada (<code>git push origin v0.1</code>)</label></li>
+</ul>
+<hr>
+<section id="apêndice-pacotes-úteis" class="level2">
+<h2 class="anchored" data-anchor-id="apêndice-pacotes-úteis">Apêndice — Pacotes úteis</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>,<span class="st">"janitor"</span>,<span class="st">"lubridate"</span>,<span class="st">"here"</span>,<span class="st">"fs"</span>,<span class="st">"usethis"</span>,<span class="st">"gert"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

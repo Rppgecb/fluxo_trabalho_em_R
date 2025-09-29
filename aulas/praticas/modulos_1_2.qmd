@@ -1,0 +1,354 @@
+---
+title: "Prática — Fluxo de Trabalho Reprodutível com Dados Ecológicos em R (Dia 03)"
+subtitle: "Checklist do Ambiente + Exercício Guiado"
+author: "Diogo S. B. Rocha · Hernani Ramos"
+date: "2025-09-28"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    theme: cosmo
+    number-sections: false
+editor: source
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+> **Objetivo:** configurar um ambiente reprodutível (R + RStudio + Git + GitHub via SSH), criar um repositório com estrutura padronizada, **simular o recebimento de dados** de um parceiro científico e **gerar uma tabela de estatística descritiva**, salvando saídas nas pastas certas. Ao final, criar **uma *tag* Git** para marcar a entrega.
+
+# 1) Checklist do ambiente (marque o que concluir)
+
+-   [ ] Verificar se **R** está instalado
+-   [ ] Verificar **versão do R**
+-   [ ] Verificar se **RStudio** está instalado
+-   [ ] Verificar **versão do RStudio**
+-   [ ] Verificar se **Git** (Git Bash no Windows) está instalado
+-   [ ] Ajustar **Configurações globais** recomendadas no RStudio
+-   [ ] Ter **conta no GitHub** (anotar usuário)
+-   [ ] **Criar chave SSH** e adicioná-la ao GitHub
+-   [ ] **Conectar RStudio ↔ GitHub** (protocolo SSH)
+-   [ ] **Criar um repositório** para a prática
+-   [ ] **Criar estrutura de pastas** padronizada
+-   [ ] **Organizar os dados** em `data/` (raw vs processed)
+-   [ ] **Criar e organizar scripts** em `scripts/`
+-   [ ] **Fazer commits** (mensagens claras)
+-   [ ] **Criar uma *tag*** ao finalizar
+
+## 1.1 Verificar R e RStudio
+
+```{r check-r, echo=TRUE}
+# Versão do R
+R.version.string
+```
+
+```{r check-rstudio, echo=TRUE}
+# Versão do RStudio (se estiver rodando dentro do RStudio)
+if (requireNamespace("rstudioapi", quietly = TRUE)) {
+  tryCatch(rstudioapi::versionInfo()$version, error = function(e) "Rode no RStudio para detectar a versão.")
+} else {
+  "Pacote rstudioapi não está instalado ou não está no RStudio."
+}
+```
+
+## 1.2 Verificar Git (Git Bash no Windows)
+
+```{r check-git, echo=TRUE}
+git_path <- Sys.which("git")
+list(git_path = git_path, git_version = tryCatch(system("git --version", intern = TRUE), error = function(e) NA))
+```
+
+**Se `git_path` estiver vazio:** instale o Git (no Windows, com Git Bash) e reinicie o RStudio.\
+- Windows: https://git-scm.com/download/win\
+- macOS: `xcode-select --install` (ou instale via Homebrew: `brew install git`)\
+- Linux (Debian/Ubuntu): `sudo apt-get install git`
+
+## 1.3 RStudio — Configurações Globais recomendadas
+
+-   Abra **Tools \> Global Options...** e ajuste:\
+    - **General**:\
+     - desmarque *Restore .RData into workspace at startup*\
+     - em *Save workspace to .RData on exit*: selecione **Never**\
+     - desmarque *Always save history (even when not saving .Rdata)\
+    - **Code**:\
+     - Editing\
+     - marque* Insert spaces for Tab\*\
+     - habilite *Soft-wrap* para código (opcional)\
+     - *Display*\
+     - marque *Show line numbers*\
+     - marque *Highlight R function calls*\
+     - marque *Enable preview of names ...*\
+     - marque *Use rainbow parentheses*\
+     - *Saving*:\
+     - em *Default text encoding:* vá em *Change:* e escolha **UTF-8**\
+    - **Terminal** (Windows): defina **Git Bash** como terminal (opcional, mas recomendado).\
+    - **Appearance**: veja se tem algum *Editor theme* que lhe agrade mais :)\
+
+## 1.4 GitHub + SSH
+
+1)  Crie uma conta em **github.com** (se ainda não tiver).\
+2)  Gere uma **chave SSH** (uma única vez por máquina). Em **Tools** -> **Global options** -> **Git/SVN** -> **SSH key**
+3)  No GitHub: **Settings \> SSH and GPG keys \> New SSH key** → cole a **chave pública** e salve.\
+4)  Teste no terminal (Git Bash/macOS/Linux):
+
+``` bash
+ssh -T git@github.com
+```
+
+Deve aparecer algo como: *"Hi* <seu-usuario>! You've successfully authenticated..." (na primeira vez, confirme *yes*).
+
+# 2) Projeto e repositório
+
+## 2.1 Criar um projeto com Git
+
+**Opção A (Recomendado):** RStudio → **New Project \> New Directory \> New Project** → marque **Create a git repository**.\
+**Opção B (Clonar do GitHub):** crie um repositório vazio no GitHub (via web), copie a **URL SSH** e use **New Project \> Version Control \> Git**.
+
+Para vincular um projeto local a um repositório remoto depois:
+
+``` bash
+git remote add origin git@github.com:SEU-USUARIO/nome-do-repo.git
+git branch -M main
+git push -u origin main
+```
+
+## 2.2 Estrutura de pastas padronizada
+
+Crie as pastas abaixo (pode rodar este chunk uma vez):
+
+```{r make-dirs, eval=FALSE}
+dirs <- c(
+  "data/raw", "data/processed",
+  "scripts",
+  "outputs/figuras", "outputs/tabelas", "outputs/logs",
+  "docs"
+)
+for (d in dirs) if (!dir.exists(d)) dir.create(d, recursive = TRUE, showWarnings = FALSE)
+
+# Arquivos úteis
+if (!file.exists(".gitignore")) writeLines(c(
+  ".Rhistory", ".RData", ".Rproj.user", ".Renviron", "outputs/logs/", "data/processed/*.rds"
+), ".gitignore")
+
+if (!file.exists("README.md")) writeLines("# Prática — Fluxo Reprodutível (Dia 03)\n", "README.md")
+```
+
+Faça um **commit** com a mensagem: *"estrutura inicial de pastas + gitignore"*.
+
+# 3) Exercício prático: recebendo dados de um parceiro
+
+## 3.1 Contexto (e-mail fictício)
+
+> **Assunto:** Dados de monitoramento — Mata Atlântica (solicitação de resumo)\
+> **De:** Dra. Helena Silva [helena.silva\@labeco.org](mailto:helena.silva@labeco.org){.email}\
+> **Para:** Você [voce\@universidade.br](mailto:voce@universidade.br){.email}\
+> **Data:** 20/08/2025
+>
+> Olá,\
+> Em anexo estão dois arquivos com dados de uma campanha de campo realizada em 2024-2025:\
+> 1) `ocorrencias_herpetofauna_2024_2025.csv` — registros por parcela com colunas: `site_id`, `data`, `bioma`, `especie`, `abundancia`.\
+> 2) `locais_amostragem.csv` — metadados dos locais (`site_id`, `municipio`, `uf`, `lat`, `lon`, `area_ha`, `tipo_habitat`).
+>
+> **Precisamos até amanhã** de uma **tabela de estatística descritiva** que traga, **por espécie e por tipo de habitat**: *n amostras, soma de abundância, média, desvio-padrão, mínimo e máximo* de `abundancia`.\
+> Por favor:\
+> - Mantenha os **dados brutos** intocados em `data/raw/`.\
+> - Faça a limpeza e junção em **scripts** separados e salve a versão tratada em `data/processed/`.\
+> - Salve a **tabela final** em `outputs/tabelas/` e, se possível, um **boxplot** de abundância por espécie em `outputs/figuras/`.\
+> - Versione tudo no Git e nos avise quando finalizar (pode marcar uma **tag**).
+>
+> Obrigada,\
+> Helena
+
+## 3.2 Gerar dados de exemplo (se você não tiver os anexos)
+
+> **Obs.:** este chunk apenas **simula** os arquivos do parceiro dentro de `data/raw/`.
+
+```{r gerar-dados, eval=FALSE}
+set.seed(123)
+if (!dir.exists("data/raw")) dir.create("data/raw", recursive = TRUE)
+
+# Locais
+locais <- data.frame(
+  site_id = sprintf("S%03d", 1:20),
+  municipio = sample(c("Ilhéus","Una","Itacaré","Uruçuca"), 20, TRUE),
+  uf = "BA",
+  lat = runif(20, -15.5, -13.5),
+  lon = runif(20, -40.0, -38.0),
+  area_ha = round(runif(20, 5, 300), 1),
+  tipo_habitat = sample(c("Floresta","Mata Secundária","Cabruca"), 20, TRUE)
+)
+
+# Ocorrências (2024-2025)
+especies <- c("Chaunus ictericus","Boana faber","Leptodactylus latrans","Rhinella crucifer")
+datas <- seq(as.Date("2024-03-01"), as.Date("2025-02-28"), by = "week")
+ocorr <- data.frame(
+  site_id = sample(locais$site_id, 400, TRUE),
+  data = sample(datas, 400, TRUE),
+  bioma = "Mata Atlantica",
+  especie = sample(especies, 400, TRUE),
+  abundancia = rpois(400, lambda = sample(1:6, 400, TRUE))
+)
+
+write.csv(ocorr, "data/raw/ocorrencias_herpetofauna_2024_2025.csv", row.names = FALSE)
+write.csv(locais, "data/raw/locais_amostragem.csv", row.names = FALSE)
+```
+
+Faça um **commit**: *"data: adiciona dados brutos simulados (ocorrências + locais)"*.
+
+## 3.3 Organização dos scripts
+
+Crie dois scripts em `scripts/`:
+
+1.  `01_preparo_dados.R` — leitura, limpeza, junção e exportação para `data/processed/`
+2.  `02_descritiva.R` — cálculo das estatísticas e exportação para `outputs/tabelas/` (+ figura em `outputs/figuras/`)
+
+> Você pode usar os **templates** abaixo (eles **não rodam automaticamente**). Copie e ajuste conforme necessário.
+
+### Template: `scripts/01_preparo_dados.R`
+
+```{r template-01, eval=FALSE}
+# scripts/01_preparo_dados.R
+# Leitura, limpeza e junção dos dados para data/processed/
+
+# Pacotes
+req <- c("tidyverse", "janitor", "lubridate", "here")
+new <- req[!req %in% installed.packages()[,1]]
+if (length(new)) install.packages(new, dependencies = TRUE)
+invisible(lapply(req, library, character.only = TRUE))
+
+# Caminhos
+raw_dir <- here::here("data", "raw")
+proc_dir <- here::here("data", "processed")
+if (!dir.exists(proc_dir)) dir.create(proc_dir, recursive = TRUE)
+
+# Leitura
+occ <- readr::read_csv(file.path(raw_dir, "ocorrencias_herpetofauna_2024_2025.csv")) %>%
+  janitor::clean_names()
+
+loc <- readr::read_csv(file.path(raw_dir, "locais_amostragem.csv")) %>%
+  janitor::clean_names()
+
+# Tratamento básico
+occ <- occ %>%
+  mutate(
+    data = lubridate::as_date(data),
+    especie = stringr::str_squish(especie),
+    abundancia = as.numeric(abundancia)
+  )
+
+# Junção
+dados <- occ %>% left_join(loc, by = "site_id")
+
+# Validar colunas essenciais
+stopifnot(all(c("site_id","data","especie","abundancia","tipo_habitat") %in% names(dados)))
+
+# Exportar
+out_csv <- file.path(proc_dir, "ocorrencias_tratadas.csv")
+readr::write_csv(dados, out_csv)
+message("Salvo: ", out_csv)
+```
+
+### Template: `scripts/02_descritiva.R`
+
+```{r template-02, eval=FALSE}
+# scripts/02_descritiva.R
+# Estatística descritiva por especie x tipo_habitat
+
+req <- c("tidyverse", "here")
+new <- req[!req %in% installed.packages()[,1]]
+if (length(new)) install.packages(new, dependencies = TRUE)
+invisible(lapply(req, library, character.only = TRUE))
+
+proc_dir <- here::here("data", "processed")
+tab_dir  <- here::here("outputs", "tabelas")
+fig_dir  <- here::here("outputs", "figuras")
+
+for (d in c(tab_dir, fig_dir)) if (!dir.exists(d)) dir.create(d, recursive = TRUE)
+
+dados <- readr::read_csv(file.path(proc_dir, "ocorrencias_tratadas.csv"))
+
+# Estatística descritiva
+desc <- dados %>%
+  group_by(especie, tipo_habitat) %>%
+  summarise(
+    n_amostras = n(),
+    soma_abund = sum(abundancia, na.rm = TRUE),
+    media = mean(abundancia, na.rm = TRUE),
+    dp = sd(abundancia, na.rm = TRUE),
+    minimo = min(abundancia, na.rm = TRUE),
+    maximo = max(abundancia, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(especie, tipo_habitat)
+
+out_csv <- file.path(tab_dir, "estatistica_descritiva_especie_habitat.csv")
+readr::write_csv(desc, out_csv)
+message("Salvo: ", out_csv)
+
+# Figura (boxplot)
+p <- ggplot(dados, aes(x = especie, y = abundancia)) +
+  geom_boxplot() +
+  labs(x = "Espécie", y = "Abundância", title = "Abundância por espécie") +
+  theme_minimal()
+
+out_png <- file.path(fig_dir, "boxplot_abundancia_por_especie.png")
+ggsave(out_png, p, width = 9, height = 5, dpi = 300)
+message("Salvo: ", out_png)
+```
+
+Faça **commits** a cada etapa (mensagens curtas e claras). Exemplos: - *"feat: script de preparo de dados"* - *"feat: script de descritiva + tabela/figura"*
+
+## 3.4 Execução (ordem sugerida)
+
+1)  Rodar `scripts/01_preparo_dados.R`\
+2)  Conferir `data/processed/ocorrencias_tratadas.csv`\
+3)  Rodar `scripts/02_descritiva.R`\
+4)  Conferir `outputs/tabelas/estatistica_descritiva_especie_habitat.csv` e a figura em `outputs/figuras/`
+
+# 4) Tag de entrega
+
+No **Terminal** (no diretório do projeto):
+
+``` bash
+git add -A
+git commit -m "Entrega: descritiva herpetofauna (Dia 03)"
+git tag -a v0.1 -m "Entrega prática Dia 03"
+git push origin main
+git push origin v0.1
+```
+
+> **Alternativa em R (gert):**
+>
+> ``` r
+> install.packages("gert")
+> library(gert)
+> gert::git_add(".")
+> gert::git_commit("Entrega: descritiva herpetofauna (Dia 03)")
+> gert::git_tag_create("v0.1", message = "Entrega prática Dia 03")
+> gert::git_push()
+> gert::git_push(tags = TRUE)
+> ```
+
+# 5) Checklist final (deveria estar tudo marcado ✅)
+
+-   [ ] Repositório criado e vinculado ao GitHub por **SSH**
+-   [ ] Estrutura de pastas padronizada criada
+-   [ ] Dados brutos em `data/raw/`
+-   [ ] Dados processados em `data/processed/`
+-   [ ] Scripts em `scripts/` (separados por etapa)
+-   [ ] Tabela final em `outputs/tabelas/`
+-   [ ] Figura em `outputs/figuras/`
+-   [ ] Commits feitos com mensagens claras
+-   [ ] **Tag** criada e enviada (`git push origin v0.1`)
+
+------------------------------------------------------------------------
+
+## Apêndice — Pacotes úteis
+
+```{r pkgs, eval=FALSE}
+install.packages(c("tidyverse","janitor","lubridate","here","fs","usethis","gert"))
+```
+
