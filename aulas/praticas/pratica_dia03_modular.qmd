@@ -31,7 +31,7 @@ Os dados de entrada estão em `data_raw/` (você já recebeu assim).
 **Faça**:
 
 ```         
-data_raw/   # já contém os CSV desta prática
+data_raw/   # incluir os CSV desta prática
 data/       # para saídas limpas e tabelas de resumo
 R/          # scripts auxiliares (opcional)
 ```
