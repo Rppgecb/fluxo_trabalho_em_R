@@ -1,0 +1,835 @@
+---
+title: "Fluxo de Trabalho Reprodutível com Dados Ecológicos em R"
+subtitle: "Dia 03 — Teoria (Módulo 3: Manipulação e Limpeza de Dados)"
+author: "Diogo S. B. Rocha, Hernani Ramos"
+date: 03/08/2025
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    width: 1280
+    height: 720
+    preview-links: auto
+    css: styles.css
+    incremental: false
+editor: visual
+lang: pt
+---
+
+## Bem-vindos — Dia 03 (Teoria)
+
+### Módulo 3 – Manipulação e limpeza de dados
+
+::: incremental
+-   Importação e exportação (**readr**, **readxl**, **sf**, **terra**)
+-   Tratamento de **dados ausentes** e **inconsistentes**
+-   Transformação e sumarização com **dplyr** e **tidyr**
+-   **Joins** com chaves confiáveis
+-   Boas práticas: **Tidy Data**, FAIR e rastreabilidade
+:::
+
+------------------------------------------------------------------------
+
+## Objetivos do dia
+
+::: incremental
+-   Entender o que é **Tidy Data** e por que isso facilita análises.
+-   Dominar a **importação** de dados tabulares (CSV/XLSX) e espaciais (vetor/raster).
+-   Aplicar técnicas de **limpeza**: tipos, codificação, NAs, categorias e datas.
+-   Transformar, **juntar** e **resumir** dados com `dplyr`/`tidyr`.
+-   Registrar saídas limpas e metadados para um fluxo **reprodutível**.
+:::
+
+------------------------------------------------------------------------
+
+## Tidy Data (dados arrumados)
+
+Três regras (Hadley Wickham):
+
+::: incremental
+1.  Cada **variável** em uma **coluna**.
+2.  Cada **observação** em uma **linha**.
+3.  Cada **valor** em uma **célula**.
+:::
+
+::: incremental
+-   **Benefícios:** menos “gambiarras”, **joins** previsíveis, gráficos e modelos mais simples.
+:::
+
+------------------------------------------------------------------------
+
+## Onde entram as planilhas?
+
+Os programas de planilhas são úteis para **entrada de dados** e verificações rápidas de qualidade.
+
+![](https://http2.mlstatic.com/centenas-de-planilhas-excel-prontas-100-editaveis-D_NQ_NP_14094-MLB3478257526_122012-F.jpg){fig-align="center"}
+
+::: notes
+Mensagem‑guia: planilha é porta de entrada, **não** é a ferramenta de análise principal.
+:::
+
+------------------------------------------------------------------------
+
+## Cuidado com o uso *além* do necessário
+
+-   Muitas pessoas usam planilhas para:
+    -   criar tabelas de publicações;
+    -   gerar estatísticas resumidas;
+    -   fazer figuras.
+
+> Recomendação: prefira **scripts** (R/Rmarkdown/Quarto) para análise e visualização — reprodutíveis e auditáveis.
+
+![](https://exceleasy.com.br/wp-content/uploads/2017/11/Deixar-planilha-mais-bonita-no-excel.png){fig-align="center" width="90%"}
+
+------------------------------------------------------------------------
+
+## Exemplos do que costuma ir para o R
+
+-   Tabelas e figuras de artigos: melhor produzir via script.
+
+::::: columns
+::: {.column .fragment}
+![](images/fig1.png){fig-align="center" width="90%"}
+:::
+
+::: {.column .fragment}
+![](images/fig2.jpg){fig-align="center" width="110%"} ![](images/fig3.png){fig-align="center" width="40%"}
+:::
+:::::
+
+------------------------------------------------------------------------
+
+## Ainda assim…
+
+Há cenários “rápidos e sujos” nas planilhas.\
+**Mas**, mantenha o foco na organização dos dados e na reprodutibilidade.
+
+![](https://blog.luz.vc/wp-content/uploads/2014/09/Planilha-Feia-3.jpg){fig-align="center" width="100%"}
+
+------------------------------------------------------------------------
+
+## Agenda do bloco
+
+::: incremental
+-   Formatação de tabelas de dados em planilhas (boas práticas)
+-   Problemas comuns de formatação
+-   Exportação para formatos abertos (CSV/TXT)
+-   Importação no R e padronização de tipos
+-   Limpeza e transformação (`dplyr`/`tidyr`)
+-   Joins com chaves confiáveis
+-   FAIR + metadados + rastreabilidade
+:::
+
+# Uma boa <u>organização de dados</u> é a base de qualquer projeto de pesquisa ! {.bigger .vcenter}
+
+## Formatação de tabelas (boas práticas)
+
+Principais erros ao usar planilhas como “caderno”:\
+- Anotações na margem e mesclagem de células\
+- Layout espacial para transmitir informação\
+- Colocar unidades/comentários dentro de células\
+
+![](images/fig5.png){fig-align="center" width="70%"}
+
+------------------------------------------------------------------------
+
+## Computadores não “entendem contexto”
+
+-   Computadores são literais; precisamos ser **explícitos**.
+-   Prepare dados para leitura por programas.
+
+![](https://datacarpentry.org/spreadsheet-ecology-lesson/fig/single-info.png){fig-align="center" width="70%"}
+
+------------------------------------------------------------------------
+
+## Planeje antes de digitar
+
+::::: columns
+::: {.column .fragment}
+-   Desenhe o **esquema de variáveis**
+-   Defina **tipos** (numérico, texto, data)
+
+![](https://st2.depositphotos.com/1017986/6992/i/950/depositphotos_69927457-stock-photo-close-up-of-hands-with.jpg){fig-align="center" width="80%"}
+:::
+
+::: {.column .fragment}
+![](https://mentirinhas.com.br/wp-content/uploads/2018/06/horo_26.jpg){fig-align="center" width="80%"}
+:::
+:::::
+
+------------------------------------------------------------------------
+
+## Reprodutibilidade
+
+Planilha **inicial** ≠ planilha **final**
+
+-   Nunca altere os dados brutos.
+-   Salve uma **versão limpa** e documente o processo (README + metadados).
+
+![](https://datacarpentry.org/spreadsheet-ecology-lesson/fig/spreadsheet-setup-updated.png){fig-align="center" width="80%"}
+
+------------------------------------------------------------------------
+
+## Regras essenciais
+
+-   Não misture múltiplas informações numa célula
+-   Exporte os dados para um formato aberto como **CSV** (**C**omma-**S**eparated **V**alues).
+-   Variáveis em **colunas**; observações em **linhas**; um valor por **célula**
+
+::: fragment
+![](https://flaeterno.wordpress.com/wp-content/uploads/2012/09/346ap811.jpg){fig-align="center"}
+:::
+
+------------------------------------------------------------------------
+
+![](https://global.discourse-cdn.com/nubank/original/3X/6/4/64a9cf79d1a3afd3cc6b5081f0b30e8b309a7b03.gif){fig-align="center" width="30%"}
+
+::: {style="text-align:center; font-size:1.6em"}
+-   **colunas = variáveis**\
+-   **linhas = observações**\
+-   **células = dados (valores)**
+:::
+
+------------------------------------------------------------------------
+
+\
+\
+\
+\
+
+![](https://pt.r4ds.hadley.nz/images/tidy-1-pt.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+## Problemas comuns de planilhas
+
+::: incremental
+-   Várias **tabelas** numa planilha
+-   Várias **abas** para o mesmo conjunto
+-   Falta de **zeros** (confunde NA com 0)
+-   Valores nulos **heterogêneos** (“.”, “–”, “NA”, “faltou”)
+-   **Formatação** (cores, negrito) para codificar informação
+-   Comentários/unidades **dentro** de células
+-   **Duas informações** na mesma célula
+-   **Cabeçalhos ruins** (espaços, acentos, caracteres especiais)
+:::
+
+------------------------------------------------------------------------
+
+### Várias **tabelas** numa planilha
+
+![](https://datacarpentry.org/spreadsheet-ecology-lesson/fig/2_datasheet_example.jpg){fig-align="center"}
+
+------------------------------------------------------------------------
+
+### Várias **abas** para o mesmo conjunto
+
+![](images/fig08.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+### Falta de **zeros** (confunde NA com 0)
+
+![](images/fig09.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+### Valores nulos **heterogêneos** (“.”, “–”, “NA”, “faltou”)
+
+![](images/fig010.png){fig-align="center" width="30%"}
+
+::: {style="text-align:center; font-size:0.6em"}
+White, Ethan P., et al.  (2013) "Nine simple ways to make it easier to (re) use your data." Ideas in Ecology and Evolution 6.2\
+:::
+
+------------------------------------------------------------------------
+
+### **Formatação** (cores, negrito) para codificar informação
+
+![](images/fig011.png){fig-align="center" width="30%"}
+
+------------------------------------------------------------------------
+
+### Comentários/unidades **dentro** de células
+
+![](images/fig013.png){fig-align="center" width="30%"}
+
+------------------------------------------------------------------------
+
+### **Duas informações** na mesma célula
+
+![](images/fig014.png){fig-align="center" width="30%"}
+
+------------------------------------------------------------------------
+
+### **Cabeçalhos ruins** (espaços, acentos, caracteres especiais)
+
+![](images/fig015.png){fig-align="center" width="30%"}
+
+------------------------------------------------------------------------
+
+## Exportando dados (CSV)
+
+::::: columns
+::: column
+Passo a passo (Excel/Calc):\
+
+1.  **Arquivo → Salvar Como**\
+
+2.  Escolha a pasta do projeto\
+
+3.  Selecione **CSV (separado por vírgulas)**\
+
+4.  Confirme encoding **UTF-8** se disponível
+:::
+
+::: column
+![](images/fig016.png){fig-align="center"}
+:::
+:::::
+
+------------------------------------------------------------------------
+
+Abrir no editor de texto:
+
+![](images/fig017.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+## Usando o
+
+![](https://cdn.iconscout.com/icon/free/png-256/r-5-283170.png){width="10%"}
+
+![](https://media0.giphy.com/media/ZVik7pBtu9dNS/giphy.gif){fig-align="center" width="60%"}
+
+------------------------------------------------------------------------
+
+\
+\
+\
+
+![](https://pt.r4ds.hadley.nz/diagrams/data-science/base-pt.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+## Importação — dados tabulares
+
+\
+
+``` r
+library(readr)
+library(readxl)
+
+# CSV (ponto decimal)
+dados1 <- read_csv("data_raw/parcelas.csv")
+
+# CSV com vírgula decimal ou ; como separador
+dados2 <- read_csv2("data_raw/parcelas_br.csv")
+# ou: read_delim("data_raw/parcelas_br.csv", delim = ";")
+
+# Excel (primeira aba ou pelo nome)
+dados3 <- read_excel("data_raw/parcelas.xlsx", sheet = 1)
+```
+
+------------------------------------------------------------------------
+
+## Tipos, nomes e consistência
+
+``` r
+library(dplyr)
+library(stringr)
+
+dados <- dados1 %>%
+  rename(parcela_id = Parcela) %>%
+  mutate(
+    especie  = str_squish(str_to_sentence(Especie)),
+    data     = as.Date(data) # ou lubridate::dmy(data_texto)
+  )
+```
+
+------------------------------------------------------------------------
+
+## NAs e valores “sentinela”
+
+\
+
+``` r
+library(tidyr)
+library(readr)
+
+dados <- read_csv("data_raw/parcelas.csv", na = c("", "NA", "-9999"))
+
+dados %>% drop_na(area_m2)                       # descartar
+dados %>% replace_na(list(altura_m = 0))         # imputação simples (cautela)
+```
+
+Checklist:
+
+-   o NA significa “não medido”, “não aplicável” ou “zero”?
+
+-   Campos obrigatórios podem ter NA?
+
+------------------------------------------------------------------------
+
+## Datas e tempos
+
+\
+
+``` r
+library(lubridate)
+
+dados <- dados %>%
+  mutate(
+    data = dmy(data),                 # "31/01/2025" -> Date
+    ano  = year(data),
+    mes  = month(data, label = TRUE, abbr = TRUE)
+  )
+```
+
+Guarde datas como `Date`/`POSIXct` (evite texto puro).
+
+------------------------------------------------------------------------
+
+## dplyr — seleção, transformação e resumo
+
+\
+
+``` r
+library(dplyr)
+
+resumo <- dados  %>% 
+  filter(!is.na(area_m2), tratamento == "controle")  %>% 
+  mutate(densidade = n_individuos / area_m2) %>% 
+  group_by(especie) %>% 
+  summarise(
+    n = n(),
+    densidade_media = mean(densidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  arrange(desc(densidade_media))
+```
+
+------------------------------------------------------------------------
+
+## tidyr — arrumar, separar, unir
+
+``` r
+library(tidyr)
+
+# largo -> longo
+longo <- dados  %>% 
+  pivot_longer(
+    cols = starts_with("parcela_"),
+    names_to  = "parcela",
+    values_to = "valor"
+  )
+
+# longo -> largo
+largo <- longo  %>% 
+  pivot_wider(names_from = parcela, values_from = valor)
+
+# separar / unir colunas
+tab <- dados %>% 
+  separate(coleta_id, into = c("parcela", "campanha"), sep = "-") %>% 
+  unite("coleta_id", parcela, campanha, sep = "-")
+```
+
+------------------------------------------------------------------------
+
+## Joins com chaves confiáveis
+
+``` r
+# verificação de chave única
+stopifnot(dplyr::n_distinct(chaves$parcela_id) == nrow(chaves))
+
+# left
+tab <- medidas %>%
+  dplyr::left_join(chaves, by = "parcela_id")
+
+# right
+
+# full
+
+# anti
+```
+
+**Atenção**: chaves duplicadas multiplicam linhas.
+
+------------------------------------------------------------------------
+
+## Importação — dados espaciais (vetor/raster)
+
+``` r
+library(sf)
+library(terra)
+
+# Vetor
+vetor <- sf::read_sf("data_raw/limites.gpkg")   # ou st_read("...")
+
+# Raster
+ras <- terra::rast("data_raw/uso_solo_30m.tif")
+
+# Conferir CRS
+sf::st_crs(vetor)
+terra::crs(ras)
+```
+
+Documente resolução, fonte e data de obtenção dos dados.
+
+------------------------------------------------------------------------
+
+## Exportação
+
+``` r
+# Tabelas
+readr::write_csv(dados, "data/parcelas_clean.csv")
+saveRDS(dados, "data/parcelas_clean.rds")
+
+# Vetor e raster
+sf::write_sf(vetor, "data/limites_clean.gpkg")
+terra::writeRaster(ras, "data/uso_solo_clean.tif"
+```
+
+------------------------------------------------------------------------
+
+# Vamos aos exemplos:
+
+------------------------------------------------------------------------
+
+-   **CSV é texto simples.**
+-   **Primeira linha = cabeçalho** com os nomes das colunas.
+-   **Linhas seguintes = dados**, uma linha por registro/observação.
+-   **Colunas são delimitadas por vírgulas** (`,`).
+-   **Sem formatação** (sem negrito, cores, fórmulas).
+-   **Compatível** com Excel, Google Sheets e linguagens como R/Python.
+
+------------------------------------------------------------------------
+
+::: fragment
+``` bash
+ID Estudante,Nome Completo,comida.favorita,planoAlimentar,IDADE
+1,Pedro Cardoso,Iogurte de morango,Só almoço,4     
+2,Rafaela Lorenzoni,Batata frita,Só almoço,5       
+3,Otávio Barros,N/A,Café da manhã e almoço,7       
+4,Fernanda Melo,Brócolis,Só almoço,NA
+5,Leopoldo Souza,Pizza,Café da manhã e almoço,cinco
+6,Pérola Silva,Sorvete,Só almoço,6
+```
+:::
+
+::: fragment
+![](images/tabela.png){width="110%"}
+:::
+
+------------------------------------------------------------------------
+
+## Importando
+
+```{r, echo=TRUE}
+library(readr)
+estudantes <- read_csv("https://raw.githubusercontent.com/cienciadedatos/pt-r4ds/traducao-pt-2ed/data/estudantes.csv")
+
+estudantes
+```
+
+-   **Problema:** `"N/A"` está como texto, não como `NA` (faltante).
+-   **Padrão do `read_csv()`**: só trata `""` (string vazia) como `NA`.
+
+------------------------------------------------------------------------
+
+-   **Solução:** indicar valores faltantes via `na=`.
+
+```{r, echo=TRUE}
+estudantes <- read_csv("data/estudantes.csv", na = c("N/A", ""))
+
+estudantes
+```
+
+::: fragment
+-   **Nomes não-sintáticos:** têm espaços/acentos/símbolos.
+-   **R exige crases** para usá-los: `` dados$`ID Estudante `` ou `` select(dados, `Nome Completo`) ``.
+:::
+
+------------------------------------------------------------------------
+
+-   **Solução:** renomeie para nomes válidos (ex.: `ID_Estudante`, `Nome_Completo`) com `rename()`.
+
+```{r, echo=TRUE}
+library(dplyr)
+estudantes %>%
+  rename(
+    id_estudante = `ID Estudante`,
+    nome_completo = `Nome Completo`
+  )
+```
+
+------------------------------------------------------------------------
+
+-   ou usar `janitor::clean_names()`, que transforma todos os nomes de variáveis em snake case de uma só vez
+
+```{r, echo=TRUE}
+estudantes  %>% janitor::clean_names()
+```
+
+------------------------------------------------------------------------
+
+## Importando dados de múltiplos arquivos
+
+```{r, echo=TRUE}
+arquivos_vendas <- c("data/01-vendas.csv", "data/02-vendas.csv", "data/03-vendas.csv")
+read_csv(arquivos_vendas, id = "arquivo")
+```
+
+------------------------------------------------------------------------
+
+## Transformar os dados
+
+```{r, echo=TRUE}
+x <- c(1, 2, 3, 5, 7, 11, 13)
+x * 2
+
+df <- tibble(x)
+df |> 
+  mutate(y = x * 2)
+```
+
+------------------------------------------------------------------------
+
+## Comparações
+
+-   Vetores lógicos nascem de comparações: \<, \<=, \>, \>=, !=, ==.
+-   No filter(), essas condições são calculadas e descartadas após o filtro.
+
+```{r, echo=TRUE}
+library(dados)
+voos |> 
+  filter(horario_saida > 600,
+         horario_saida < 2000,
+         abs(atraso_chegada) < 20)
+```
+
+------------------------------------------------------------------------
+
+-   Com apenas um atalho e você pode explicitamente criar a variável lógica intrínseca com `mutate()`:
+
+```{r, echo=TRUE}
+voos |> 
+  mutate(
+    diurno = horario_saida > 600 & horario_saida < 2000,
+    aprox_no_horario = abs(atraso_chegada) < 20,
+    .keep = "used"
+  )
+```
+
+------------------------------------------------------------------------
+
+-   Com isto, o filtro inicial é equivalente a:
+
+```{r, echo=TRUE}
+voos |> 
+  mutate(
+    diurno = horario_saida > 600 & horario_saida < 2000,
+    aprox_no_horario = abs(atraso_chegada) < 20,
+  ) |> 
+  filter(diurno & aprox_no_horario)
+```
+
+------------------------------------------------------------------------
+
+## Contagens
+
+::::: columns
+::: column
+```{r, echo=TRUE}
+voos |> count(destino)
+```
+:::
+
+::: column
+```{r, echo=TRUE}
+voos |> count(destino, sort = TRUE)
+```
+:::
+:::::
+
+------------------------------------------------------------------------
+
+## *summarize*
+
+```{r, echo=TRUE}
+voos |> 
+  group_by(destino) |> 
+  summarize(
+    n = n(),
+    atraso_min = min(atraso_chegada, na.rm = TRUE),
+    atraso_medio = mean(atraso_chegada, na.rm = TRUE),
+    desvio_padrao = sd(atraso_chegada, na.rm = TRUE),
+    atraso_max = max(atraso_chegada, na.rm = TRUE)
+  )
+
+```
+
+------------------------------------------------------------------------
+
+## Datas e horários
+
+```{r, echo=TRUE}
+library(lubridate)
+today()
+
+now()
+```
+
+------------------------------------------------------------------------
+
+![](images/hora.png)
+
+------------------------------------------------------------------------
+
+```{r, echo=TRUE}
+csv <- "
+  date
+  01/02/15
+"
+
+read_csv(csv, col_types = cols(date = col_date("%m/%d/%y")))
+
+read_csv(csv, col_types = cols(date = col_date("%d/%m/%y")))
+
+read_csv(csv, col_types = cols(date = col_date("%y/%m/%d")))
+
+```
+
+------------------------------------------------------------------------
+
+## Durações
+
+```{r, echo=TRUE}
+# Quantos anos o Diogo tem?
+d_age <- today() - ymd("1984-05-10")
+d_age
+
+as.duration(d_age)
+```
+
+------------------------------------------------------------------------
+
+## Valores faltantes (NA)
+
+```{r, echo=TRUE}
+library(tidyr)
+tratamento <- tribble(
+  ~pessoa,           ~tratamento, ~resposta,
+  "Derrick Whitmore", 1,         7,
+  NA,                 2,         10,
+  NA,                 3,         NA,
+  "Katherine Burke",  1,         4
+)
+
+tratamento  %>% 
+  fill(everything())
+```
+
+------------------------------------------------------------------------
+
+## Uniões (joins)
+
+-   `left_join`, `right_join`, `full_join`, `anti_join`
+
+```{r}
+library(readr)
+library(dplyr)
+
+occ <- read_csv("data/ocorrencias_especies.csv")
+bio <- read_csv("data/biomas_por_especie.csv")
+
+cat("> occ")
+occ
+cat("---------------------------------------------------------")
+cat("> bio")
+bio
+```
+
+------------------------------------------------------------------------
+
+-   `left_join` (`right_join`)
+
+```{r, echo=TRUE}
+# LEFT JOIN: mantém todas as ocorrências; bioma pode ficar NA
+left_join(occ, bio, by = "species")
+```
+
+------------------------------------------------------------------------
+
+-   `full_join`
+
+```{r, echo=TRUE}
+# FULL JOIN: mantém tudo dos dois lados (ocorrências sem bioma e espécies sem ocorrência)
+full_join(occ, bio, by = "species")
+```
+
+-   `anti_join`
+
+```{r, echo=TRUE}
+# ANTI JOIN: tem em um e não tem no outro (espécies que com biomas e sem ocorrências)
+anti_join(bio, occ)
+```
+
+------------------------------------------------------------------------
+
+## `joins`
+
+-   **Quando usar (resumo):**
+
+    -   `left_join()` — mantém **tudo de `x`**, anexa o que casar em `y`.
+    -   `inner_join()` — mantém **apenas correspondências** entre `x` e `y`.
+    -   `right_join()` — mantém **tudo de `y`**.
+    -   `full_join()` — **tudo de ambos**, com `NA` onde não casar.
+    -   `anti_join()` — **filtra `x`** para chaves **ausentes** em `y`.
+
+![](https://pt.r4ds.hadley.nz/diagrams/join/venn.png)
+
+------------------------------------------------------------------------
+
+## Fluxo recomendado (scripts)
+
+```         
+R/
+├── 01_importacao.R        # lê CSV/XLSX/SF/terra (não altera brutos)
+├── 02_limpeza.R           # tipos, NAs, categorias, datas
+├── 03_transformacao.R     # dplyr/tidyr: reshape, novos campos
+├── 04_joins.R             # integra tabelas com chaves validadas
+├── 05_resumos.R           # sumarizações e export de tabelas
+└── 06_exporta_saidas.R    # write_csv/writeRaster + logs
+```
+
+**Dados brutos** em `data_raw/` e **nunca** editados.
+
+------------------------------------------------------------------------
+
+## Anti‑padrões comuns (evite)
+
+::: incremental
+-   Editar manualmente **dados brutos**.
+-   Misturar **separadores** e **decimais** em CSV (padronize).
+-   Títulos em **múltiplas linhas** e células mescladas.
+-   Chaves de join com **espaços/acentos** inconsistentes.
+-   Datas como texto em múltiplos formatos.
+-   “Tudo em um script só” sem etapas claras.
+:::
+
+------------------------------------------------------------------------
+
+## Resumo do Dia 3 — Teoria
+
+-   Tidy Data reduz atrito e erros.
+-   Importação correta evita “efeito dominó”.
+-   Limpeza = tipos, NAs, categorias, datas, duplicatas.
+-   `dplyr`/`tidyr` para transformar; **joins** com chaves checadas.
+-   Exportar limpo + metadados para reuso **reprodutível**.
+
+------------------------------------------------------------------------
+
+## Dúvidas?
+
+À tarde: **prática** — checklist de limpeza, `readr`/`readxl`, `dplyr`/`tidyr`, joins e export.

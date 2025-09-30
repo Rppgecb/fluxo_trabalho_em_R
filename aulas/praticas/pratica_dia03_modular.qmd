@@ -1,0 +1,249 @@
+---
+title: "Dia 03 — Prática Guiada"
+subtitle: "Contexto: Doutorando recebe dados de outro grupo e precisa analisar"
+format:
+  html:
+    code-fold: show
+    toc: true
+    toc-depth: 2
+editor: visual
+lang: pt
+---
+
+# Narrativa
+
+Você é um(a) **doutorando(a)** que recebeu um pacote de dados ecológicos de outro grupo. Sua missão é: **organizar o repositório → importar (CSV) → limpar/padronizar → integrar (joins) → analisar o básico → exportar resultados + metadados.**
+
+Os dados de entrada estão em `data_raw/` (você já recebeu assim).
+
+## O que você vai entregar
+
+-   `data/parcelas_clean.csv` e `data/parcelas_clean.rds`
+-   `data/resumo_densidade.csv` (síntese por espécie × bioma × tratamento)
+-   `data/README.md` com metadados e dicionário de dados
+
+------------------------------------------------------------------------
+
+# Módulo 0 — Repositório do projeto
+
+**Objetivo**: criar estrutura mínima, sem tocar nos brutos.
+
+**Faça**:
+
+```         
+data_raw/   # já contém os CSV desta prática
+data/       # para saídas limpas e tabelas de resumo
+R/          # scripts auxiliares (opcional)
+```
+
+**Critérios de conclusão**: - \[ \] `data_raw/` permanece inalterado - \[ \] Existem pastas `data/` e (opcional) `R/`
+
+------------------------------------------------------------------------
+
+# Módulo 1 — Importação (CSV)
+
+**Arquivos**: `data_raw/parcelas.csv`, `data_raw/parcelas_br.csv`
+
+**Objetivo**: ler as duas variantes (ponto decimal e vírgula decimal) com NAs coerentes.
+
+``` r
+library(readr)
+p_csv <- read_csv("data_raw/parcelas.csv",
+                  na = c("", "NA", "N/A", "-9999"))
+p_br  <- read_csv2("data_raw/parcelas_br.csv",
+                   na = c("", "NA", "N/A", "-9999"))
+```
+
+**Critérios**: - \[ \] `nrow(p_csv) == nrow(p_br)` - \[ \] `glimpse(p_csv)` mostra tipos numéricos adequados (sem texto misto)
+
+------------------------------------------------------------------------
+
+# Módulo 2 — Padronização (nomes, tipos e conteúdo)
+
+**Objetivo**: criar um `dados` padronizado.
+
+``` r
+library(dplyr)
+library(stringr)
+library(lubridate)
+
+dados <- p_csv %>%
+  rename(parcela_id = Parcela,
+         especie    = Especie) %>%
+  mutate(
+    especie  = str_squish(str_to_sentence(especie)),
+    data     = dmy(data),                # "dd/mm/yyyy"
+    area_m2  = as.double(area_m2),
+    altura_m = as.double(altura_m)
+  )
+```
+
+**Critérios**: - \[ \] `data` é `Date` - \[ \] Numéricos não têm texto misturado - \[ \] `especie` está trimado e com espaçamento único
+
+------------------------------------------------------------------------
+
+# Módulo 3 — Faltantes, sentinelas e categorias
+
+**Objetivo**: lidar com `NA`, códigos sentinela e padronizar tratamentos.
+
+``` r
+library(dplyr)
+library(tidyr)
+
+dados <- dados %>%
+  mutate(
+    tratamento = recode(str_to_lower(trimws(tratamento)),
+                        "controle" = "controle",
+                        "control"  = "controle",
+                        "impacto"  = "impacto",
+                        "tratado"  = "impacto",
+                        .default = tratamento)
+  ) %>%
+  distinct() %>%
+  tidyr::drop_na(area_m2) %>%
+  mutate(densidade = n_individuos / area_m2)
+```
+
+**Critérios**: - \[ \] Linhas duplicadas removidas (`distinct()`) - \[ \] `tratamento` ∈ {controle, impacto} - \[ \] `densidade` calculada (pode ter `NA` se faltantes existirem)
+
+------------------------------------------------------------------------
+
+# Módulo 4 — Chaves e *joins* confiáveis
+
+**Arquivos**: `data_raw/chaves_parcelas.csv`, `data_raw/especies.csv`
+
+**Objetivo**: validar chave, integrar bioma e guilda, e diagnosticar falhas.
+
+``` r
+chaves <- readr::read_csv("data_raw/chaves_parcelas.csv", show_col_types = FALSE)
+
+# Resolver duplicata de chave (mantém primeira ocorrência)
+chaves <- dplyr::distinct(chaves, parcela_id, .keep_all = TRUE)
+
+dados <- dados %>%
+  dplyr::left_join(chaves, by = "parcela_id")
+
+# Dicionário de espécies
+dic <- readr::read_csv("data_raw/especies.csv")
+dados <- dados %>%
+  dplyr::left_join(dic %>%
+                     dplyr::rename(especie = especie_raw) %>%
+                     dplyr::select(especie, especie_std, guilda),
+                   by = "especie") %>%
+  dplyr::mutate(especie = dplyr::coalesce(especie_std, especie)) %>%
+  dplyr::select(-especie_std)
+
+# Diagnósticos
+faltando_em_chaves <- dplyr::anti_join(dados, chaves, by = "parcela_id")
+faltando_no_dic    <- dplyr::anti_join(dados, dic, by = c("especie" = "especie_raw"))
+```
+
+**Critérios**: - \[ \] `faltando_em_chaves` vazio - \[ \] `bioma` presente após join - \[ \] `guilda` presente (quando mapeada no dicionário)
+
+------------------------------------------------------------------------
+
+# Módulo 5 — Datas (lubridate) e colunas derivadas
+
+**Objetivo**: enriquecer com ano/mês para sumarizações.
+
+``` r
+dados <- dados %>%
+  mutate(
+    ano = year(data),
+    mes = month(data, label = TRUE)
+  )
+```
+
+**Critérios**: - \[ \] `ano` numérico e `mes` categórico rotulado
+
+------------------------------------------------------------------------
+
+# Módulo 6 — Análise estatística simples
+
+**Pergunta**: densidade média difere entre **tratamentos** por **bioma**? Quais espécies dominam em densidade?
+
+``` r
+resumo <- dados %>%
+  group_by(bioma, tratamento, especie) %>%
+  summarise(
+    n_registros = n(),
+    densidade_media = mean(densidade, na.rm = TRUE),
+    densidade_sd    = sd(densidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(bioma, tratamento, desc(densidade_media))
+
+top5 <- resumo %>%
+  group_by(bioma, tratamento) %>%
+  slice_max(densidade_media, n = 5, with_ties = FALSE) %>%
+  ungroup()
+```
+
+**Critérios**: - \[ \] Existe um `resumo` com colunas: bioma, tratamento, especie, n_registros, densidade_media, densidade_sd - \[ \] `top5` traz as 5 espécies mais densas por bioma×tratamento
+
+*(Opcional)* faça um teste rápido (ex.: `wilcox.test`) de `densidade` entre tratamentos **dentro** de cada bioma (se amostra permitir).
+
+------------------------------------------------------------------------
+
+# Módulo 7 — Exportação de resultados
+
+**Objetivo**: materializar saídas reusáveis.
+
+``` r
+readr::write_csv(dados,  "data/parcelas_clean.csv")
+saveRDS(dados,           "data/parcelas_clean.rds")
+readr::write_csv(resumo, "data/resumo_densidade.csv")
+readr::write_csv(top5,   "data/top5_especies_por_bioma_tratamento.csv")
+```
+
+**Critérios**: - \[ \] Arquivos escritos na pasta `data/`
+
+------------------------------------------------------------------------
+
+# Módulo 8 — (Opcional) Coordenadas → `sf`
+
+**Arquivo**: `data_raw/parcelas_coords.csv`
+
+**Objetivo**: anexar coordenadas e criar `sf` para conferência espacial.
+
+``` r
+library(dplyr)
+library(readr)
+library(terra)
+
+coords <- read_csv("data_raw/parcelas_coords.csv", show_col_types = FALSE)
+
+dados_join <- dados %>%
+  left_join(coords %>% select(parcela_id, lon, lat), by = "parcela_id")
+
+# cria SpatVector de pontos (WGS84)
+dados_vect <- vect(dados_join, geom = c("lon", "lat"), crs = "EPSG:4326")
+
+# ver CRS
+crs(dados_vect)
+
+# exportar para GeoPackage
+writeVector(dados_vect, "data/parcelas_clean.gpkg", overwrite = TRUE)
+```
+
+**Critérios**: - \[ \] CRS é `EPSG:4326` - \[ \] Número de feições = número de linhas com coordenadas
+
+------------------------------------------------------------------------
+
+# Módulo 9 — Metadados (README + dicionário)
+
+Crie `data/README.md` contendo: - **Fonte** de cada arquivo em `data_raw/` (quem enviou, quando, contato) - **Dicionário** (nome, tipo, unidade, descrição, códigos de NA) - **Decisões de limpeza** (sentinelas, normalizações, duplicatas, chaves) - **Licença** e **como citar**
+
+*(Sugestão)* gere um tibble com nome/tipo de `dados` (`tibble(nome = names(dados), tipo = sapply(dados, class))`) e exporte como `data/dicionario.csv`.
+
+------------------------------------------------------------------------
+
+# Check-list final (autoavaliação)
+
+-   [ ] CSV lidos com `na=` correto (inclui `-9999` e `N/A`)
+-   [ ] Nomes/tipos padronizados; datas em `Date`
+-   [ ] Tratamento de duplicatas e checagem de chave
+-   [ ] Joins com `anti_join` para diagnóstico
+-   [ ] Resumo estatístico simples entregue
+-   [ ] Exportações em `data/` + README com metadados
+-   [ ] (Opcional) `vect` criado a partir de coordenadas
