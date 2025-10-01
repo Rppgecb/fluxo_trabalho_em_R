@@ -67,7 +67,7 @@ library(dplyr)
 library(stringr)
 library(lubridate)
 
-dados <- p_csv %>%
+dados <- dados %>%
   rename(parcela_id = Parcela,
          especie    = Especie) %>%
   mutate(
